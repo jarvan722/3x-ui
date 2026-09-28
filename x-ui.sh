@@ -452,31 +452,31 @@ check_config() {
         fi
 
         if [[ "$domain" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-            echo -e "${green}Access URL: https://${domain}:${existing_port}${existing_webBasePath}${plain}"
+            echo -e "${green}访问地址： https://${domain}:${existing_port}${existing_webBasePath}${plain}"
         else
-            echo -e "${green}Access URL: https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
+            echo -e "${green}访问地址： https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
         fi
         if [[ -n "$cert_sans" && $(echo "$cert_sans" | wc -l) -gt 1 ]]; then
             echo -e "${yellow}该证书还覆盖以下域名：${plain} $(echo "$cert_sans" | grep -vx "$domain" | tr '\n' ' ')"
         fi
     else
         echo -e "${red}⚠ WARNING: 否 SSL certificate configured!${plain}"
-        echo -e "${yellow}You can get a Let's Encrypt certificate for your IP address (valid ~6 days, auto-renews).${plain}"
+        echo -e "${yellow}你可以为服务器 IP 申请 Let's Encrypt 证书（有效期约 6 天，自动续期）。${plain}"
         read -rp "现在为服务器 IP 申请 SSL 证书？[y/N]： " gen_ssl
         if [[ "$gen_ssl" == "y" || "$gen_ssl" == "Y" ]]; then
             stop 0 > /dev/null 2>&1
             ssl_cert_issue_for_ip
             if [[ $? -eq 0 ]]; then
-                echo -e "${green}Access URL: https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
+                echo -e "${green}访问地址： https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
                 # ssl_cert_issue_for_ip already restarts the panel, but ensure it's running
                 start 0 > /dev/null 2>&1
             else
-                LOGE "IP certificate setup failed."
+                LOGE "IP 证书配置失败。"
                 echo -e "${yellow}You can try again via main menu option 20 (SSL 证书管理).${plain}"
                 start 0 > /dev/null 2>&1
             fi
         else
-            echo -e "${yellow}Access URL: http://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
+            echo -e "${yellow}访问地址： http://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
             echo -e "${yellow}For security, please configure SSL certificate using main menu option 20 (SSL 证书管理)${plain}"
         fi
     fi
@@ -490,7 +490,7 @@ set_port() {
         before_show_menu
     else
         ${xui_folder}/x-ui setting -port ${port}
-        echo -e "The port is set, Please restart the panel now, and use the new port ${green}${port}${plain} to access web panel"
+        echo -e "端口已设置，请现在重启面板，并使用新端口 ${green}${port}${plain}访问 Web 面板"
         confirm_restart
     fi
 }
@@ -499,7 +499,7 @@ start() {
     check_status
     if [[ $? == 0 ]]; then
         echo ""
-        LOGI "Panel is running, 否 need to start again, If you need to restart, please select restart"
+        LOGI "面板正在运行，无需再次启动。如需重启，请选择“重启面板”"
     else
         if [[ "${running_in_docker}" == "true" ]]; then
             LOGE "Panel process is not running inside this container."
@@ -518,9 +518,9 @@ start() {
         sleep 2
         check_status
         if [[ $? == 0 ]]; then
-            LOGI "x-ui 启动ed Successfully"
+            LOGI "x-ui 启动成功"
         else
-            LOGE "panel Failed to start, Probably because it takes longer than two seconds to start, Please check the log information later"
+            LOGE "面板启动失败，可能是因为 it takes longer than two seconds to start, Please check the log information later"
         fi
     fi
 
@@ -1366,9 +1366,9 @@ ssl_cert_issue_main() {
         2)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 找到证书 to revoke."
+                echo "没有找到可撤销的证书。"
             else
-                echo "Existing domains:"
+                echo "已有域名："
                 echo "$domains"
                 read -rp "请输入要撤销并删除证书的域名： " domain
                 if echo "$domains" | grep -qw "$domain"; then
@@ -1388,18 +1388,18 @@ ssl_cert_issue_main() {
                     done
                     # Delete the local certificate files for this domain.
                     rm -rf "/root/cert/${domain}"
-                    LOGI "Certificate revoked and removed for domain: ${domain}"
+                    LOGI "已撤销并删除域名证书： ${domain}"
 
                     # If the panel currently serves this domain's cert, clear the stored paths
                     # so it stops loading the now-deleted files, then restart.
                     local existing_cert=$(${xui_folder}/x-ui setting -getCert true | grep 'cert:' | awk -F': ' '{print $2}' | tr -d '[:space:]')
                     if [[ "${existing_cert}" == "/root/cert/${domain}/"* ]]; then
                         ${xui_folder}/x-ui cert -reset
-                        LOGI "Cleared panel certificate paths referencing ${domain}; restarting panel."
+                        LOGI "已清除面板中引用该域名的证书路径，正在重启面板。"
                         restart
                     fi
                 else
-                    echo "Invalid domain entered."
+                    echo "输入的域名无效。"
                 fi
             fi
             ssl_cert_issue_main
@@ -1407,16 +1407,16 @@ ssl_cert_issue_main() {
         3)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 找到证书 to renew."
+                echo "没有找到可续期的证书。"
             else
-                echo "Existing domains:"
+                echo "已有域名："
                 echo "$domains"
                 read -rp "请输入要强制续期 SSL 证书的域名： " domain
                 if echo "$domains" | grep -qw "$domain"; then
                     ~/.acme.sh/acme.sh --renew -d ${domain} --force
-                    LOGI "Certificate forcefully renewed for domain: $domain"
+                    LOGI "已强制续期域名证书： $domain"
                 else
-                    echo "Invalid domain entered."
+                    echo "输入的域名无效。"
                 fi
             fi
             ssl_cert_issue_main
@@ -1424,18 +1424,18 @@ ssl_cert_issue_main() {
         4)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 找到证书 under /root/cert."
+                echo "/root/cert 下没有找到证书。"
             else
-                echo "Existing domains and their paths:"
+                echo "已有域名及证书路径："
                 for domain in $domains; do
                     local cert_path="/root/cert/${domain}/fullchain.pem"
                     local key_path="/root/cert/${domain}/privkey.pem"
                     if [[ -f "${cert_path}" && -f "${key_path}" ]]; then
-                        echo -e "Domain: ${domain}"
-                        echo -e "\tCertificate Path: ${cert_path}"
-                        echo -e "\tPrivate Key Path: ${key_path}"
+                        echo -e "域名：${domain}"
+                        echo -e "\t证书路径：${cert_path}"
+                        echo -e "\t私钥路径：${key_path}"
                     else
-                        echo -e "Domain: ${domain} - Certificate or Key missing."
+                        echo -e "域名：${domain} - Certificate or Key missing."
                     fi
                 done
             fi
@@ -1443,27 +1443,27 @@ ssl_cert_issue_main() {
             # (e.g. certbot under /etc/letsencrypt) — show it too (#5070).
             local panel_cert=$(${xui_folder}/x-ui setting -getCert true | grep 'cert:' | awk -F': ' '{print $2}' | tr -d '[:space:]')
             if [[ -n "${panel_cert}" && "${panel_cert}" != /root/cert/* ]]; then
-                echo -e "Panel certificate (custom path): ${panel_cert}"
+                echo -e "面板证书（自定义路径）：${panel_cert}"
                 if [[ -f "${panel_cert}" ]] && command -v openssl > /dev/null 2>&1; then
                     local panel_sans=$(openssl x509 -in "${panel_cert}" -noout -ext subjectAltName 2> /dev/null \
                         | grep -Eo 'DNS:[^,[:space:]]+' | cut -d: -f2 | tr '\n' ' ')
-                    [[ -n "${panel_sans}" ]] && echo -e "\tCovers: ${panel_sans}"
+                    [[ -n "${panel_sans}" ]] && echo -e "\t覆盖域名：${panel_sans}"
                 fi
             fi
             ssl_cert_issue_main
             ;;
         5)
-            echo -e "${green}\t1.${plain} Use a certificate from /root/cert"
-            echo -e "${green}\t2.${plain} Enter custom certificate file paths (e.g. certbot, /etc/letsencrypt/...)"
+            echo -e "${green}\t1.${plain} 使用 /root/cert 中的证书"
+            echo -e "${green}\t2.${plain} 输入自定义证书文件路径（例如 certbot、/etc/letsencrypt/...）"
             read -rp "请选择： " pathChoice
             if [[ "$pathChoice" == "2" ]]; then
                 read -rp "证书文件路径（fullchain）： " webCertFile
-                read -rp "Private key file path: " webKeyFile
+                read -rp "私钥文件路径： " webKeyFile
                 if [[ -f "${webCertFile}" && -f "${webKeyFile}" ]]; then
                     ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
                     echo "面板证书路径已设置："
-                    echo "  - Certificate File: $webCertFile"
-                    echo "  - Private Key File: $webKeyFile"
+                    echo "  - 证书文件：$webCertFile"
+                    echo "  - 私钥文件：$webKeyFile"
                     restart
                 else
                     echo "未找到证书或私钥文件。"
@@ -1475,7 +1475,7 @@ ssl_cert_issue_main() {
             if [ -z "$domains" ]; then
                 echo "否 找到证书."
             else
-                echo "Available domains:"
+                echo "可用域名："
                 echo "$domains"
                 read -rp "请选择要设置面板证书路径的域名： " domain
 
@@ -1485,9 +1485,9 @@ ssl_cert_issue_main() {
 
                     if [[ -f "${webCertFile}" && -f "${webKeyFile}" ]]; then
                         ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
-                        echo "Panel paths set for domain: $domain"
-                        echo "  - Certificate File: $webCertFile"
-                        echo "  - Private Key File: $webKeyFile"
+                        echo "已为域名设置面板证书路径：$domain"
+                        echo "  - 证书文件：$webCertFile"
+                        echo "  - 私钥文件：$webKeyFile"
                         # Register the acme.sh install-cert hook so auto-renewal copies the
                         # renewed cert to these paths and reloads the panel. Without it acme.sh
                         # renews but never updates /root/cert, silently serving a stale cert.
@@ -1496,14 +1496,14 @@ ssl_cert_issue_main() {
                                 --key-file "${webKeyFile}" \
                                 --fullchain-file "${webCertFile}" \
                                 --reloadcmd "x-ui restart" 2>&1 || true
-                            echo "Registered acme.sh auto-renewal hook for ${domain}."
+                            echo "已为 ${domain} 注册 acme.sh 自动续期钩子。"
                         fi
                         restart
                     else
-                        echo "Certificate or private key not found for domain: $domain."
+                        echo "未找到域名 $domain 的证书或私钥。"
                     fi
                 else
-                    echo "Invalid domain entered."
+                    echo "输入的域名无效。"
                 fi
             fi
             ssl_cert_issue_main
@@ -1512,8 +1512,8 @@ ssl_cert_issue_main() {
             echo -e "${yellow}Let's Encrypt IP 地址 SSL 证书${plain}"
             echo -e "将使用 shortlived 配置文件为服务器 IP 申请证书。"
             echo -e "${yellow}证书有效期约 6 天，并通过 acme.sh 定时任务自动续期。${plain}"
-            echo -e "${yellow}Port 80 must be open and accessible from the internet.${plain}"
-            confirm "Do you want to proceed?" "y"
+            echo -e "${yellow}端口 80 必须开放，并且可从互联网访问。${plain}"
+            confirm "是否继续？" "y"
             if [[ $? == 0 ]]; then
                 ssl_cert_issue_for_ip
             fi
@@ -1725,10 +1725,10 @@ ssl_cert_issue_for_ip() {
         if [[ -f "$webCertFile" && -f "$webKeyFile" ]]; then
             ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
             LOGI "Panel paths set for IP: $server_ip"
-            LOGI "  - Certificate File: $webCertFile"
-            LOGI "  - Private Key File: $webKeyFile"
+            LOGI "  - 证书文件：$webCertFile"
+            LOGI "  - 私钥文件：$webKeyFile"
             LOGI "  - Validity: ~6 days (auto-renews via acme.sh cron)"
-            echo -e "${green}Access URL: https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
+            echo -e "${green}访问地址： https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
             LOGI "Panel will restart to apply SSL certificate..."
             restart
         else
@@ -1945,10 +1945,10 @@ ssl_cert_issue() {
 
         if [[ -f "$webCertFile" && -f "$webKeyFile" ]]; then
             ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
-            LOGI "Panel paths set for domain: $domain"
-            LOGI "  - Certificate File: $webCertFile"
-            LOGI "  - Private Key File: $webKeyFile"
-            echo -e "${green}Access URL: https://${domain}:${existing_port}${existing_webBasePath}${plain}"
+            LOGI "已为域名设置面板证书路径：$domain"
+            LOGI "  - 证书文件：$webCertFile"
+            LOGI "  - 私钥文件：$webKeyFile"
+            echo -e "${green}访问地址： https://${domain}:${existing_port}${existing_webBasePath}${plain}"
             restart
         else
             LOGE "Error: 未找到域名证书或私钥文件： $domain."
@@ -2095,9 +2095,9 @@ ssl_cert_issue_CF() {
             if [[ -f "$webCertFile" && -f "$webKeyFile" ]]; then
                 ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
                 LOGI "Panel paths set for domain: $CF_Domain"
-                LOGI "  - Certificate File: $webCertFile"
-                LOGI "  - Private Key File: $webKeyFile"
-                echo -e "${green}Access URL: https://${CF_Domain}:${existing_port}${existing_webBasePath}${plain}"
+                LOGI "  - 证书文件：$webCertFile"
+                LOGI "  - 私钥文件：$webKeyFile"
+                echo -e "${green}访问地址： https://${CF_Domain}:${existing_port}${existing_webBasePath}${plain}"
                 restart
             else
                 LOGE "Error: 未找到域名证书或私钥文件： $CF_Domain."
