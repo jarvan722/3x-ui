@@ -3535,7 +3535,6 @@ show_menu() {
     esac
 }
 
-}
 if [[ $# > 0 ]]; then
     case $1 in
         "start")
