@@ -76,7 +76,7 @@ else
     echo "Failed to check the system OS, please contact the author!" >&2
     exit 1
 fi
-echo "The OS release is: $release"
+echo "系统版本： $release"
 
 os_version=""
 os_version=$(grep "^VERSION_ID" /etc/os-release | cut -d '=' -f2 | tr -d '"' | tr -d '.')
@@ -428,7 +428,7 @@ check_config() {
     if [[ -z "$server_ip" ]]; then
         echo -e "${yellow}Could not auto-detect server IP from any provider.${plain}"
         while [[ -z "$server_ip" ]]; do
-            read -rp "Please enter your server's public IPv4 address: " server_ip
+            read -rp "请输入服务器公网 IPv4 地址： " server_ip
             server_ip="${server_ip// /}"
             if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                 echo -e "${red}Invalid IPv4 address. Please try again.${plain}"
@@ -457,12 +457,12 @@ check_config() {
             echo -e "${green}Access URL: https://${server_ip}:${existing_port}${existing_webBasePath}${plain}"
         fi
         if [[ -n "$cert_sans" && $(echo "$cert_sans" | wc -l) -gt 1 ]]; then
-            echo -e "${yellow}The certificate also covers:${plain} $(echo "$cert_sans" | grep -vx "$domain" | tr '\n' ' ')"
+            echo -e "${yellow}该证书还覆盖以下域名：${plain} $(echo "$cert_sans" | grep -vx "$domain" | tr '\n' ' ')"
         fi
     else
         echo -e "${red}⚠ WARNING: 否 SSL certificate configured!${plain}"
         echo -e "${yellow}You can get a Let's Encrypt certificate for your IP address (valid ~6 days, auto-renews).${plain}"
-        read -rp "Generate SSL certificate for IP now? [y/N]: " gen_ssl
+        read -rp "现在为服务器 IP 申请 SSL 证书？[y/N]： " gen_ssl
         if [[ "$gen_ssl" == "y" || "$gen_ssl" == "Y" ]]; then
             stop 0 > /dev/null 2>&1
             ssl_cert_issue_for_ip
@@ -1102,7 +1102,7 @@ open_ports() {
 
     # Check if the input is valid
     if ! [[ $ports =~ ^([0-9]+|[0-9]+-[0-9]+)(,([0-9]+|[0-9]+-[0-9]+))*$ ]]; then
-        echo "Error: Invalid input. Please enter a comma-separated list of ports or a range of ports (e.g. 80,443,2053 or 400-500)." >&2
+        echo "错误：输入无效。请输入逗号分隔的端口列表或端口范围（例如 80,443,2053 或 400-500）。" >&2
         exit 1
     fi
 
@@ -1154,7 +1154,7 @@ delete_ports() {
 
         # Validate the input
         if ! [[ $rule_numbers =~ ^([0-9]+)(,[0-9]+)*$ ]]; then
-            echo "Error: Invalid input. Please enter a comma-separated list of rule numbers." >&2
+            echo "错误：输入无效。请输入逗号分隔的规则编号。" >&2
             exit 1
         fi
 
@@ -1173,7 +1173,7 @@ delete_ports() {
 
         # Validate the input
         if ! [[ $ports =~ ^([0-9]+|[0-9]+-[0-9]+)(,([0-9]+|[0-9]+-[0-9]+))*$ ]]; then
-            echo "Error: Invalid input. Please enter a comma-separated list of ports or a range of ports (e.g. 80,443,2053 or 400-500)." >&2
+            echo "错误：输入无效。请输入逗号分隔的端口列表或端口范围（例如 80,443,2053 或 400-500）。" >&2
             exit 1
         fi
 
@@ -1207,7 +1207,7 @@ delete_ports() {
             fi
         done
     else
-        echo "${red}Error:${plain} Invalid choice. Please enter 1 or 2." >&2
+        echo "${red}Error:${plain} 选项无效，请输入 1 或 2。" >&2
         exit 1
     fi
 }
@@ -1346,12 +1346,12 @@ install_acme() {
 }
 
 ssl_cert_issue_main() {
-    echo -e "${green}\t1.${plain} Get SSL (Domain)"
-    echo -e "${green}\t2.${plain} Revoke & Remove"
-    echo -e "${green}\t3.${plain} Force Renew"
-    echo -e "${green}\t4.${plain} Show Existing Domains"
-    echo -e "${green}\t5.${plain} Set Cert paths for the panel"
-    echo -e "${green}\t6.${plain} Get SSL for IP Address (6-day cert, auto-renews)"
+    echo -e "${green}\t1.${plain} 申请 SSL 证书（域名）"
+    echo -e "${green}\t2.${plain} 撤销并删除证书"
+    echo -e "${green}\t3.${plain} 强制续期证书"
+    echo -e "${green}\t4.${plain} 查看已有域名"
+    echo -e "${green}\t5.${plain} 设置面板证书路径"
+    echo -e "${green}\t6.${plain} 申请 IP 地址 SSL 证书（6 天证书，自动续期）"
     echo -e "${green}\t0.${plain} 返回主菜单"
 
     read -rp "请选择： " choice
@@ -1366,11 +1366,11 @@ ssl_cert_issue_main() {
         2)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 certificates found to revoke."
+                echo "否 找到证书 to revoke."
             else
                 echo "Existing domains:"
                 echo "$domains"
-                read -rp "Please enter a domain from the list to revoke and remove the certificate: " domain
+                read -rp "请输入要撤销并删除证书的域名： " domain
                 if echo "$domains" | grep -qw "$domain"; then
                     # The IP-cert flow (option 6) stores files under /root/cert/ip, but acme.sh
                     # tracks the cert under the actual IP address(es). Resolve those so renewal
@@ -1407,11 +1407,11 @@ ssl_cert_issue_main() {
         3)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 certificates found to renew."
+                echo "否 找到证书 to renew."
             else
                 echo "Existing domains:"
                 echo "$domains"
-                read -rp "Please enter a domain from the list to renew the SSL certificate: " domain
+                read -rp "请输入要强制续期 SSL 证书的域名： " domain
                 if echo "$domains" | grep -qw "$domain"; then
                     ~/.acme.sh/acme.sh --renew -d ${domain} --force
                     LOGI "Certificate forcefully renewed for domain: $domain"
@@ -1424,7 +1424,7 @@ ssl_cert_issue_main() {
         4)
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 certificates found under /root/cert."
+                echo "否 找到证书 under /root/cert."
             else
                 echo "Existing domains and their paths:"
                 for domain in $domains; do
@@ -1457,27 +1457,27 @@ ssl_cert_issue_main() {
             echo -e "${green}\t2.${plain} Enter custom certificate file paths (e.g. certbot, /etc/letsencrypt/...)"
             read -rp "请选择： " pathChoice
             if [[ "$pathChoice" == "2" ]]; then
-                read -rp "Certificate file path (fullchain): " webCertFile
+                read -rp "证书文件路径（fullchain）： " webCertFile
                 read -rp "Private key file path: " webKeyFile
                 if [[ -f "${webCertFile}" && -f "${webKeyFile}" ]]; then
                     ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
-                    echo "Panel certificate paths set:"
+                    echo "面板证书路径已设置："
                     echo "  - Certificate File: $webCertFile"
                     echo "  - Private Key File: $webKeyFile"
                     restart
                 else
-                    echo "Certificate or private key file not found."
+                    echo "未找到证书或私钥文件。"
                 fi
                 ssl_cert_issue_main
                 return
             fi
             local domains=$(find /root/cert/ -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2> /dev/null)
             if [ -z "$domains" ]; then
-                echo "否 certificates found."
+                echo "否 找到证书."
             else
                 echo "Available domains:"
                 echo "$domains"
-                read -rp "Please choose a domain to set the panel paths: " domain
+                read -rp "请选择要设置面板证书路径的域名： " domain
 
                 if echo "$domains" | grep -qw "$domain"; then
                     local webCertFile="/root/cert/${domain}/fullchain.pem"
@@ -1509,9 +1509,9 @@ ssl_cert_issue_main() {
             ssl_cert_issue_main
             ;;
         6)
-            echo -e "${yellow}Let's Encrypt SSL Certificate for IP Address${plain}"
-            echo -e "This will obtain a certificate for your server's IP using the shortlived profile."
-            echo -e "${yellow}Certificate valid for ~6 days, auto-renews via acme.sh cron job.${plain}"
+            echo -e "${yellow}Let's Encrypt IP 地址 SSL 证书${plain}"
+            echo -e "将使用 shortlived 配置文件为服务器 IP 申请证书。"
+            echo -e "${yellow}证书有效期约 6 天，并通过 acme.sh 定时任务自动续期。${plain}"
             echo -e "${yellow}Port 80 must be open and accessible from the internet.${plain}"
             confirm "Do you want to proceed?" "y"
             if [[ $? == 0 ]]; then
@@ -1529,7 +1529,7 @@ ssl_cert_issue_main() {
 
 ssl_cert_issue_for_ip() {
     LOGI "启动ing automatic SSL certificate generation for server IP..."
-    LOGI "Using Let's Encrypt shortlived profile (~6 days validity, auto-renews)"
+    LOGI "使用 Let's Encrypt shortlived 配置（有效期约 6 天，自动续期）"
 
     local existing_webBasePath=$(${xui_folder}/x-ui setting -show true | grep -Eo 'webBasePath: .+' | awk '{print $2}')
     local existing_port=$(${xui_folder}/x-ui setting -show true | grep -Eo 'port: .+' | awk '{print $2}')
@@ -1564,7 +1564,7 @@ ssl_cert_issue_for_ip() {
     fi
 
     while [[ -z "$server_ip" ]]; do
-        read -rp "Please enter your server's public IPv4 address: " server_ip
+        read -rp "请输入服务器公网 IPv4 地址： " server_ip
         server_ip="${server_ip// /}"
         if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             LOGE "Invalid IPv4 address. Please try again."
@@ -1572,7 +1572,7 @@ ssl_cert_issue_for_ip() {
         fi
     done
 
-    LOGI "Issuing certificate for server IP: ${server_ip}"
+    LOGI "正在为服务器 IP 签发证书： ${server_ip}"
 
     # Ask for optional IPv6
     local ipv6_addr=""
@@ -1581,7 +1581,7 @@ ssl_cert_issue_for_ip() {
 
     # check for acme.sh first
     if ! command -v ~/.acme.sh/acme.sh &> /dev/null; then
-        LOGI "acme.sh not found, installing..."
+        LOGI "acme.sh not found, 正在安装……"
         install_acme
         if [ $? -ne 0 ]; then
             LOGE "Failed to install acme.sh"
@@ -1688,7 +1688,7 @@ ssl_cert_issue_for_ip() {
         rm -rf ${certPath} 2> /dev/null
         return 1
     else
-        LOGI "Certificate issued successfully for IP: ${server_ip}"
+        LOGI "服务器 IP 证书签发成功： ${server_ip}"
     fi
 
     # 安装 the certificate
@@ -1709,7 +1709,7 @@ ssl_cert_issue_for_ip() {
         return 1
     fi
 
-    LOGI "Certificate files installed successfully"
+    LOGI "证书文件安装成功。"
 
     # enable auto-renew
     ~/.acme.sh/acme.sh --upgrade --auto-upgrade > /dev/null 2>&1
@@ -1720,7 +1720,7 @@ ssl_cert_issue_for_ip() {
     local webCertFile="${certPath}/fullchain.pem"
     local webKeyFile="${certPath}/privkey.pem"
 
-    read -rp "Would you like to set this certificate for the panel? (y/n): " setPanel
+    read -rp "是否将此证书设置为面板证书？（y/n）: " setPanel
     if [[ "$setPanel" == "y" || "$setPanel" == "Y" ]]; then
         if [[ -f "$webCertFile" && -f "$webKeyFile" ]]; then
             ${xui_folder}/x-ui cert -webCert "$webCertFile" -webCertKey "$webKeyFile"
@@ -1793,7 +1793,7 @@ ssl_cert_issue() {
     # get the domain here, and we need to verify it
     local domain=""
     while true; do
-        read -rp "Please enter your domain name: " domain
+        read -rp "请输入域名： " domain
         domain="${domain// /}" # Trim whitespace
 
         if [[ -z "$domain" ]]; then
@@ -1802,13 +1802,13 @@ ssl_cert_issue() {
         fi
 
         if ! is_domain "$domain"; then
-            LOGE "Invalid domain format: ${domain}. Please enter a valid domain name."
+            LOGE "域名格式无效： ${domain}. 请输入有效的域名。"
             continue
         fi
 
         break
     done
-    LOGD "Your domain is: ${domain}, checking it..."
+    LOGD "Your domain is: ${domain}, 正在检查……"
     SSL_ISSUED_DOMAIN="${domain}"
 
     # detect existing certificate and reuse it only if its files are actually
@@ -1827,7 +1827,7 @@ ssl_cert_issue() {
         if [[ -n "${acmeCertDir}" ]]; then
             cert_exists=1
             local certInfo=$(~/.acme.sh/acme.sh --list 2> /dev/null | grep -F "${domain}")
-            LOGI "Existing certificate found for ${domain}, will reuse it."
+            LOGI "发现已有证书，将直接复用： ${domain}, 将直接复用。"
             [[ -n "${certInfo}" ]] && LOGI "${certInfo}"
         else
             LOGW "Found incomplete acme.sh state for ${domain} (no valid certificate files); cleaning it up and re-issuing."
@@ -1835,7 +1835,7 @@ ssl_cert_issue() {
         fi
     fi
     if [[ ${cert_exists} -eq 0 ]]; then
-        LOGI "Your domain is ready for issuing certificates now..."
+        LOGI "域名已准备好，可以开始签发证书……"
     fi
 
     # create a directory for the certificate
@@ -1849,7 +1849,7 @@ ssl_cert_issue() {
 
     # get the port number for the standalone server
     local WebPort=80
-    read -rp "Please choose which port to use (default is 80): " WebPort
+    read -rp "请选择用于签发证书的端口（默认 80）： " WebPort
     if [[ -z ${WebPort} ]]; then
         WebPort=80
     elif [[ ! ${WebPort} =~ ^[1-9][0-9]*$ || ${WebPort} -gt 65535 ]]; then
@@ -1863,38 +1863,38 @@ ssl_cert_issue() {
         ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --force
         ~/.acme.sh/acme.sh --issue -d ${domain} $(acme_listen_flag) --standalone --httpport ${WebPort} --force
         if [ $? -ne 0 ]; then
-            LOGE "Issuing certificate failed, please check logs."
+            LOGE "证书签发失败，请检查日志。"
             rm -rf ~/.acme.sh/${domain} ~/.acme.sh/${domain}_ecc
             exit 1
         else
-            LOGE "Issuing certificate succeeded, installing certificates..."
+            LOGE "证书签发成功，正在安装证书……"
         fi
     else
-        LOGI "Using existing certificate, installing certificates..."
+        LOGI "正在使用已有证书并安装……"
     fi
 
     reloadCmd="x-ui restart"
 
     LOGI "Default --reloadcmd for ACME is: ${yellow}x-ui restart"
     LOGI "This command will run on every certificate issue and renew."
-    read -rp "Would you like to modify --reloadcmd for ACME? (y/n): " setReloadcmd
+    read -rp "是否修改 ACME 证书续期后的执行命令？（y/n）： " setReloadcmd
     if [[ "$setReloadcmd" == "y" || "$setReloadcmd" == "Y" ]]; then
-        echo -e "\n${green}\t1.${plain} Preset: systemctl reload nginx ; x-ui restart"
-        echo -e "${green}\t2.${plain} Input your own command"
-        echo -e "${green}\t0.${plain} Keep default reloadcmd"
+        echo -e "\n${green}\t1.${plain} 预设：x-ui restart"
+        echo -e "${green}\t2.${plain} 输入自定义命令"
+        echo -e "${green}\t0.${plain} 保持默认命令：x-ui restart"
         read -rp "请选择： " choice
         case "$choice" in
             1)
-                LOGI "Reloadcmd is: systemctl reload nginx ; x-ui restart"
-                reloadCmd="systemctl reload nginx ; x-ui restart"
+                LOGI "续期执行命令：x-ui restart"
+                reloadCmd="x-ui restart"
                 ;;
             2)
                 LOGD "It's recommended to put x-ui restart at the end, so it won't raise an error if other services fails"
-                read -rp "Please enter your reloadcmd (example: systemctl reload nginx ; x-ui restart): " reloadCmd
-                LOGI "Your reloadcmd is: ${reloadCmd}"
+                read -rp "请输入证书续期后的执行命令（例如：x-ui restart）： " reloadCmd
+                LOGI "自定义续期执行命令： ${reloadCmd}"
                 ;;
             *)
-                LOGI "Keep default reloadcmd"
+                LOGI "保持默认命令：x-ui restart"
                 ;;
         esac
     fi
@@ -1925,20 +1925,20 @@ ssl_cert_issue() {
     # enable auto-renew
     ~/.acme.sh/acme.sh --upgrade --auto-upgrade
     if [ $? -ne 0 ]; then
-        LOGE "Auto renew failed, certificate details:"
+        LOGE "自动续期配置失败，证书详情："
         ls -lah cert/*
         chmod 600 $certPath/privkey.pem
         chmod 644 $certPath/fullchain.pem
         exit 1
     else
-        LOGI "Auto renew succeeded, certificate details:"
+        LOGI "自动续期配置成功，证书详情："
         ls -lah cert/*
         chmod 600 $certPath/privkey.pem
         chmod 644 $certPath/fullchain.pem
     fi
 
     # Prompt user to set panel paths after successful certificate installation
-    read -rp "Would you like to set this certificate for the panel? (y/n): " setPanel
+    read -rp "是否将此证书设置为面板证书？（y/n）: " setPanel
     if [[ "$setPanel" == "y" || "$setPanel" == "Y" ]]; then
         local webCertFile="/root/cert/${domain}/fullchain.pem"
         local webKeyFile="/root/cert/${domain}/privkey.pem"
@@ -1951,7 +1951,7 @@ ssl_cert_issue() {
             echo -e "${green}Access URL: https://${domain}:${existing_port}${existing_webBasePath}${plain}"
             restart
         else
-            LOGE "Error: Certificate or private key file not found for domain: $domain."
+            LOGE "Error: 未找到域名证书或私钥文件： $domain."
         fi
     else
         LOGI "Skipping panel path setting."
@@ -2042,24 +2042,24 @@ ssl_cert_issue_CF() {
 
         LOGI "Default --reloadcmd for ACME is: ${yellow}x-ui restart"
         LOGI "This command will run on every certificate issue and renew."
-        read -rp "Would you like to modify --reloadcmd for ACME? (y/n): " setReloadcmd
+        read -rp "是否修改 ACME 证书续期后的执行命令？（y/n）： " setReloadcmd
         if [[ "$setReloadcmd" == "y" || "$setReloadcmd" == "Y" ]]; then
-            echo -e "\n${green}\t1.${plain} Preset: systemctl reload nginx ; x-ui restart"
-            echo -e "${green}\t2.${plain} Input your own command"
-            echo -e "${green}\t0.${plain} Keep default reloadcmd"
+            echo -e "\n${green}\t1.${plain} 预设：x-ui restart"
+            echo -e "${green}\t2.${plain} 输入自定义命令"
+            echo -e "${green}\t0.${plain} 保持默认命令：x-ui restart"
             read -rp "请选择： " choice
             case "$choice" in
                 1)
-                    LOGI "Reloadcmd is: systemctl reload nginx ; x-ui restart"
-                    reloadCmd="systemctl reload nginx ; x-ui restart"
+                    LOGI "续期执行命令：x-ui restart"
+                    reloadCmd="x-ui restart"
                     ;;
                 2)
                     LOGD "It's recommended to put x-ui restart at the end, so it won't raise an error if other services fails"
-                    read -rp "Please enter your reloadcmd (example: systemctl reload nginx ; x-ui restart): " reloadCmd
-                    LOGI "Your reloadcmd is: ${reloadCmd}"
+                    read -rp "请输入证书续期后的执行命令（例如：x-ui restart）： " reloadCmd
+                    LOGI "自定义续期执行命令： ${reloadCmd}"
                     ;;
                 *)
-                    LOGI "Keep default reloadcmd"
+                    LOGI "保持默认命令：x-ui restart"
                     ;;
             esac
         fi
@@ -2071,7 +2071,7 @@ ssl_cert_issue_CF() {
             LOGE "Certificate installation failed, script exiting..."
             exit 1
         else
-            LOGI "Certificate installed successfully, Turning on automatic updates..."
+            LOGI "Certificate installed successfully, 正在开启自动续期……"
         fi
 
         # Enable auto-update
@@ -2080,14 +2080,14 @@ ssl_cert_issue_CF() {
             LOGE "Auto update setup failed, script exiting..."
             exit 1
         else
-            LOGI "The certificate is installed and auto-renewal is turned on. Specific information is as follows:"
+            LOGI "证书已安装并开启自动续期，详细信息如下："
             ls -lah ${certPath}/*
             chmod 600 ${certPath}/privkey.pem
             chmod 644 ${certPath}/fullchain.pem
         fi
 
         # Prompt user to set panel paths after successful certificate installation
-        read -rp "Would you like to set this certificate for the panel? (y/n): " setPanel
+        read -rp "是否将此证书设置为面板证书？（y/n）: " setPanel
         if [[ "$setPanel" == "y" || "$setPanel" == "Y" ]]; then
             local webCertFile="${certPath}/fullchain.pem"
             local webKeyFile="${certPath}/privkey.pem"
@@ -2100,7 +2100,7 @@ ssl_cert_issue_CF() {
                 echo -e "${green}Access URL: https://${CF_Domain}:${existing_port}${existing_webBasePath}${plain}"
                 restart
             else
-                LOGE "Error: Certificate or private key file not found for domain: $CF_Domain."
+                LOGE "Error: 未找到域名证书或私钥文件： $CF_Domain."
             fi
         else
             LOGI "Skipping panel path setting."
@@ -2609,7 +2609,7 @@ SSH_port_forwarding() {
     if [[ -z "$server_ip" ]]; then
         echo -e "${yellow}Could not auto-detect server IP from any provider.${plain}"
         while [[ -z "$server_ip" ]]; do
-            read -rp "Please enter your server's public IPv4 address: " server_ip
+            read -rp "请输入服务器公网 IPv4 地址： " server_ip
             server_ip="${server_ip// /}"
             if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                 echo -e "${red}Invalid IPv4 address. Please try again.${plain}"
@@ -2633,7 +2633,7 @@ SSH_port_forwarding() {
     fi
     if [[ -z "$existing_cert" && -z "$existing_key" && (-z "$existing_listenIP" || "$existing_listenIP" == "0.0.0.0") ]]; then
         echo -e "\n${red}Warning: 否 Cert and Key found! The panel is not secure.${plain}"
-        echo "Please obtain a certificate or set up SSH port forwarding."
+        echo "请先获取证书或设置 SSH 端口转发。"
     fi
 
     if [[ -n "$existing_listenIP" && "$existing_listenIP" != "0.0.0.0" && (-z "$existing_cert" && -z "$existing_key") ]]; then
